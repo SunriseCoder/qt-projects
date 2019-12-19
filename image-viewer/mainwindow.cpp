@@ -55,7 +55,7 @@ void MainWindow::on_refreshFolderButton_clicked() {
     ui->listWidget->clear();
 
     QDir directory(workFolder);
-    QStringList images = directory.entryList(QStringList() << "*.bmp" << "*.jpg" << "*.png", QDir::Files);
+    QStringList images = directory.entryList(QStringList() << "*.bmp" << "*.jpg" << "*.png" << "*.tif", QDir::Files);
     QStringList itemList;
     foreach(QString filename, images) {
         // Creating QFileInfo due to easy string operations
