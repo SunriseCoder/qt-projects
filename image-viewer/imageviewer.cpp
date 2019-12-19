@@ -58,6 +58,7 @@ void ImageViewer::moveImage(QPointF delta) {
 // Zoom In and Out Image with Mouse Wheel
 double scaleFactor = 1;
 void ImageViewer::wheelEvent(QWheelEvent *event) {
+    double oldScaleFactor = scaleFactor;
     if (event->delta() > 0) {
         scaleFactor *= 1.1;
     } else {
@@ -65,6 +66,16 @@ void ImageViewer::wheelEvent(QWheelEvent *event) {
     }
     scaleImage(scaleFactor);
     emit imageScaled(scaleFactor);
+
+    // Adjust ScrollBar positions that the position
+    // under the mouse cursor would be on the same place
+    int oldOffsetX = horizontalScrollBar()->value() + event->x();
+    int newOffsetX = oldOffsetX * scaleFactor / oldScaleFactor;
+    int oldOffsetY = verticalScrollBar()->value() + event->y();
+    int newOffsetY = oldOffsetY * scaleFactor / oldScaleFactor;
+    QPointF *delta = new QPointF(oldOffsetX - newOffsetX, oldOffsetY - newOffsetY);
+    moveImage(*delta);
+    emit imageMoved(*delta);
 }
 void ImageViewer::scaleImage(double scaleFactor) {
     QSize imageSize = scaleFactor * imageLabel->pixmap()->size();
