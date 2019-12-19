@@ -17,15 +17,5 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    QImage image;
-
-    void setImage();
-    void setImage(const QImage &newImage);
-
-    bool eventFilter(QObject *obj, QEvent *event);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseMoveEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void wheelEvent(QWheelEvent *event);
 };
 #endif // MAINWINDOW_H
