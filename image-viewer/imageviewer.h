@@ -6,6 +6,9 @@ class ImageViewer : public QScrollArea {
     Q_OBJECT
 public:
     explicit ImageViewer(QWidget *parent = nullptr);
+
+    void setImage(QString filename);
+
     ~ImageViewer();
 
 signals:
@@ -19,9 +22,6 @@ public slots:
 private:
     QLabel *imageLabel;
     QImage image;
-
-    void setImage();
-    void setImage(const QImage &newImage);
 
     void mousePressEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);

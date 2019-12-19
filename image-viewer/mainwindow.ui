@@ -23,14 +23,34 @@
       <property name="opaqueResize">
        <bool>true</bool>
       </property>
-      <widget class="QTreeView" name="treeView"/>
-      <widget class="QWidget" name="gridLayoutWidget">
-       <layout class="QGridLayout" name="imageAreaGridLayout">
+      <widget class="QWidget" name="gridLayoutWidget1">
+       <layout class="QGridLayout" name="treeViewGridLayout">
         <item row="0" column="0">
-         <widget class="ImageViewer" name="imageViewer1"/>
+         <widget class="QPushButton" name="openFolderButton">
+          <property name="text">
+           <string>Open</string>
+          </property>
+         </widget>
         </item>
         <item row="0" column="1">
-         <widget class="ImageViewer" name="imageViewer2"/>
+         <widget class="QPushButton" name="refreshFolderButton">
+          <property name="text">
+           <string>Refresh</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0" colspan="2">
+         <widget class="QListWidget" name="listWidget"/>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="gridLayoutWidget2">
+       <layout class="QGridLayout" name="imageAreaGridLayout">
+        <item row="0" column="0">
+         <widget class="ImageViewer" name="imageViewer1" native="true"/>
+        </item>
+        <item row="0" column="1">
+         <widget class="ImageViewer" name="imageViewer2" native="true"/>
         </item>
        </layout>
       </widget>
@@ -38,18 +58,14 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>22</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>ImageViewer</class>
+   <extends>QWidget</extends>
+   <header>imageviewer.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

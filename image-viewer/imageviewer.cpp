@@ -11,21 +11,21 @@ using namespace std;
 ImageViewer::ImageViewer(QWidget *parent) : QScrollArea(parent) {
     imageLabel = new QLabel();
     imageLabel->setObjectName(QString::fromUtf8("imageLabel"));
-    imageLabel->setGeometry(QRect(0, 0, 138, 535));
     imageLabel->setScaledContents(true);
     setWidget(imageLabel);
-
-    setImage();
 }
 
-void ImageViewer::setImage() {
-    QString fileName("C:\\tmp\\1.bmp");
-    QImageReader reader(fileName);
+void ImageViewer::setImage(QString filename) {
+    QImageReader reader(filename);
     reader.setAutoTransform(true);
     const QImage image = reader.read();
 
     imageLabel->setPixmap(QPixmap::fromImage(image));
     imageLabel->adjustSize();
+
+    // TODO It seems, QT bug - imageLabel doesn't emit QEvent::Resize
+    // This method updates its geometry and scrollbars
+    setWidgetResizable(false);
 }
 
 // Move Image with Mouse
