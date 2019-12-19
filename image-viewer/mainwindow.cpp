@@ -22,6 +22,14 @@ MainWindow::MainWindow(QWidget *parent)
     QList<int> list;
     list << 200 << 10000;
     ui->areaSplitter->setSizes(list);
+
+    // Connecting Cross-Image Move Signals and Slots
+    connect(ui->imageViewer1, &ImageViewer::imageMoved, ui->imageViewer2, &ImageViewer::moveImage);
+    connect(ui->imageViewer2, &ImageViewer::imageMoved, ui->imageViewer1, &ImageViewer::moveImage);
+
+    // Connecting Cross-Image Scale Signals and Slots
+    connect(ui->imageViewer1, &ImageViewer::imageScaled, ui->imageViewer2, &ImageViewer::scaleImage);
+    connect(ui->imageViewer2, &ImageViewer::imageScaled, ui->imageViewer1, &ImageViewer::scaleImage);
 }
 
 MainWindow::~MainWindow()

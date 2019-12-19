@@ -41,14 +41,18 @@ void ImageViewer::mouseMoveEvent(QMouseEvent *event) {
     lastMousePos = event->pos();
 
     if (Qt::LeftButton == event->buttons()) {
-        horizontalScrollBar()->setValue(horizontalScrollBar()->value() - mouseDelta.x());
-        verticalScrollBar()->setValue(verticalScrollBar()->value() - mouseDelta.y());
+        moveImage(mouseDelta);
+        emit imageMoved(mouseDelta);
     }
 }
 void ImageViewer::mouseReleaseEvent(QMouseEvent *event) {
     if ((event->buttons() & Qt::LeftButton) == 0) {
         //qApp->restoreOverrideCursor();
     }
+}
+void ImageViewer::moveImage(QPointF delta) {
+    horizontalScrollBar()->setValue(horizontalScrollBar()->value() - delta.x());
+    verticalScrollBar()->setValue(verticalScrollBar()->value() - delta.y());
 }
 
 // Zoom In and Out Image with Mouse Wheel
@@ -59,6 +63,10 @@ void ImageViewer::wheelEvent(QWheelEvent *event) {
     } else {
         scaleFactor /= 1.1;
     }
+    scaleImage(scaleFactor);
+    emit imageScaled(scaleFactor);
+}
+void ImageViewer::scaleImage(double scaleFactor) {
     QSize imageSize = scaleFactor * imageLabel->pixmap()->size();
     imageLabel->resize(imageSize);
 

@@ -1,14 +1,20 @@
-#include <iostream>
-
-#include <QScrollArea>
 #include <QLabel>
-
-using namespace std;
+#include <QObject>
+#include <QScrollArea>
 
 class ImageViewer : public QScrollArea {
+    Q_OBJECT
 public:
     explicit ImageViewer(QWidget *parent = nullptr);
     ~ImageViewer();
+
+signals:
+    void imageMoved(QPointF delta);
+    void imageScaled(double scaleFactor);
+
+public slots:
+    void moveImage(QPointF delta);
+    void scaleImage(double scaleFactor);
 
 private:
     QLabel *imageLabel;
