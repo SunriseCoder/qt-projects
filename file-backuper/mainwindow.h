@@ -18,5 +18,7 @@ public:
 
 private:
     Ui::MainWindow *ui;
+
+    bool loadData();
 };
 #endif // MAINWINDOW_H
