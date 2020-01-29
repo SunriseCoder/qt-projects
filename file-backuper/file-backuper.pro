@@ -16,18 +16,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    entities/task.cpp \
+    entities/taskentity.cpp \
     main.cpp \
-    mainwindow.cpp \
+    models/taskmodel.cpp \
+    ui/mainwindow.cpp \
     utils/jsonhelper.cpp
 
 HEADERS += \
-    entities/task.h \
-    mainwindow.h \
+    entities/taskentity.h \
+    models/taskmodel.h \
+    ui/mainwindow.h \
     utils/jsonhelper.h
 
 FORMS += \
-    mainwindow.ui
+    ui/mainwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

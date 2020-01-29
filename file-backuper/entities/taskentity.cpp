@@ -1,13 +1,9 @@
 #include "utils/jsonhelper.h"
 
-#include "task.h"
+#include "taskentity.h"
 
-Task::Task() {
-
-}
-
-Task Task::fromJson(QJsonObject jsonObj) {
-    Task task;
+TaskEntity TaskEntity::fromJson(QJsonObject jsonObj) {
+    TaskEntity task;
 
     if (jsonObj.contains("name")) {
         task.setName(jsonObj["name"].toString());

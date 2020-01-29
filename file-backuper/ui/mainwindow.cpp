@@ -1,7 +1,9 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
-#include "entities/task.h"
+#include "entities/taskentity.h"
+
+#include "models/taskmodel.h"
 
 #include "utils/jsonhelper.h"
 
@@ -25,15 +27,26 @@ bool MainWindow::loadData() {
         return false;
     }
 
+    tasks.clear();
     QJsonArray jsonTasks = jsonDoc.array();
     for (int i = 0; i < jsonTasks.size(); i++) {
         QJsonObject jsonTask = jsonTasks[i].toObject();
-        //Task task = Task::fromJSON(jsonTask);
-        Task task = Task::fromJson(jsonTask);
+        TaskEntity task = TaskEntity::fromJson(jsonTask);
+        tasks.append(task);
         qInfo("Task \"" + task.name().toUtf8() + "\" is loaded");
     }
 
+    fillTaskTable();
+
     return true;
+}
+
+void MainWindow::fillTaskTable() {
+    TaskModel *taskModel = new TaskModel(this, tasks);
+
+    ui->taskTable->setModel(taskModel);
+    ui->taskTable->horizontalHeader()->setVisible(true);
+    ui->taskTable->show();
 }
 
 MainWindow::~MainWindow() {

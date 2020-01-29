@@ -4,20 +4,18 @@
 #include <QJsonObject>
 #include <QString>
 
-class Task {
+class TaskEntity {
 
     public:
-        Task();
-
         // JSON Methods
-        static Task fromJson(QJsonObject jsonObj);
+        static TaskEntity fromJson(QJsonObject jsonObj);
         void toJson();
 
         // Getters and Setters
-        QString name() { return _name; }
-        void setName(QString name) { _name = name; }
+        QString name() { return m_name; }
+        void setName(QString name) { m_name = name; }
     private:
-        QString _name;
+        QString m_name;
 };
 
 #endif // TASK_H

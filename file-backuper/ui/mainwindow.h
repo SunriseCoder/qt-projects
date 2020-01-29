@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTableView>
+
+#include "entities/taskentity.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,6 +22,10 @@ public:
 private:
     Ui::MainWindow *ui;
 
+    QList<TaskEntity> tasks;
+    QMap<QString, QTableView> tables;
+
     bool loadData();
+    void fillTaskTable();
 };
 #endif // MAINWINDOW_H
