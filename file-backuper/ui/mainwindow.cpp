@@ -1,6 +1,9 @@
 #include <QJsonArray>
 #include <QJsonObject>
 
+#include <QSizePolicy>
+#include <QTableWidget>
+
 #include "entities/taskentity.h"
 
 #include "models/taskmodel.h"
@@ -44,9 +47,46 @@ bool MainWindow::loadData() {
 void MainWindow::fillTaskTable() {
     TaskModel *taskModel = new TaskModel(this, tasks);
 
-    ui->taskTable->setModel(taskModel);
-    ui->taskTable->horizontalHeader()->setVisible(true);
-    ui->taskTable->show();
+    // Tasks Label
+    QLabel *labelTasks = new QLabel("Tasks:");
+    labelTasks->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+    ui->scrollAreaLayout->addWidget(labelTasks);
+
+    // Tasks Table
+    QTableView *taskTable = new QTableView();
+    taskTable->setModel(taskModel);
+    taskTable->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+    taskTable->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    ui->scrollAreaLayout->addWidget(taskTable);
+
+    // Stub Label to fill the remaining space in the bottom of the ScrollArea
+    QLabel *stubLabel = new QLabel();
+    stubLabel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+    ui->scrollAreaLayout->addWidget(stubLabel);
+}
+
+void MainWindow::on_startButton_clicked() {
+    for (int i = 0; i < tasks.size(); i++) {
+        TaskEntity task = tasks.at(i);
+
+        // Particular Task Label
+        QLabel *label = new QLabel(task.name());
+        label->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
+        ui->scrollAreaLayout->insertWidget(ui->scrollAreaLayout->count() - 1, label);
+
+        // Particular Task Table
+        QTableWidget *table = new QTableWidget();
+        table->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+        table->setSizeAdjustPolicy(QScrollArea::AdjustToContents);
+
+        // TODO Remove Debug Data
+        for (int j = 0; j < i * 5 + 3; j++) {
+            table->insertRow(table->rowCount());
+            table->setItem(0, 0, new QTableWidgetItem("Row " + j));
+        }
+
+        ui->scrollAreaLayout->insertWidget(ui->scrollAreaLayout->count() - 1, table);
+    }
 }
 
 MainWindow::~MainWindow() {
