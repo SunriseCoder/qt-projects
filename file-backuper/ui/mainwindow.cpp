@@ -9,6 +9,7 @@
 #include "models/taskmodel.h"
 
 #include "utils/jsonhelper.h"
+#include "utils/taskexecutor.h"
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -30,13 +31,13 @@ bool MainWindow::loadData() {
         return false;
     }
 
-    tasks.clear();
+    tasks->clear();
     QJsonArray jsonTasks = jsonDoc.array();
     for (int i = 0; i < jsonTasks.size(); i++) {
         QJsonObject jsonTask = jsonTasks[i].toObject();
-        TaskEntity task = TaskEntity::fromJson(jsonTask);
-        tasks.append(task);
-        qInfo("Task \"" + task.name().toUtf8() + "\" is loaded");
+        TaskEntity *task = TaskEntity::fromJson(jsonTask);
+        tasks->append(task);
+        qInfo("Task \"" + task->name().toUtf8() + "\" is loaded");
     }
 
     fillTaskTable();
@@ -66,11 +67,20 @@ void MainWindow::fillTaskTable() {
 }
 
 void MainWindow::on_startButton_clicked() {
-    for (int i = 0; i < tasks.size(); i++) {
-        TaskEntity task = tasks.at(i);
+    ui->startButton->setEnabled(false);
+
+    createTaskTables();
+    executeTasks();
+
+    ui->startButton->setEnabled(true);
+}
+
+void MainWindow::createTaskTables() {
+    for (int i = 0; i < tasks->size(); i++) {
+        TaskEntity *task = tasks->at(i);
 
         // Particular Task Label
-        QLabel *label = new QLabel(task.name());
+        QLabel *label = new QLabel(task->name());
         label->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
         ui->scrollAreaLayout->insertWidget(ui->scrollAreaLayout->count() - 1, label);
 
@@ -78,15 +88,88 @@ void MainWindow::on_startButton_clicked() {
         QTableWidget *table = new QTableWidget();
         table->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
         table->setSizeAdjustPolicy(QScrollArea::AdjustToContents);
-
-        // TODO Remove Debug Data
-        for (int j = 0; j < i * 5 + 3; j++) {
-            table->insertRow(table->rowCount());
-            table->setItem(0, 0, new QTableWidgetItem("Row " + j));
-        }
+        table->setColumnCount(4);
+        table->setHorizontalHeaderItem(0, new QTableWidgetItem("Source File"));
+        table->setHorizontalHeaderItem(1, new QTableWidgetItem("Target File"));
+        table->setHorizontalHeaderItem(2, new QTableWidgetItem("Difference"));
+        table->setHorizontalHeaderItem(3, new QTableWidgetItem("User Choice"));
+        tables->insert(task, table);
 
         ui->scrollAreaLayout->insertWidget(ui->scrollAreaLayout->count() - 1, table);
     }
+}
+
+void MainWindow::executeTasks() {
+    QList<TaskExecutor*> *executors = new QList<TaskExecutor*>();
+
+    // Create Task Executors
+    for (int i = 0; i < tasks->size(); i++) {
+        TaskEntity *task = tasks->at(i);
+        TaskExecutor *executor = new TaskExecutor(task);
+        connect(executor, &TaskExecutor::needConfirmation, this, &MainWindow::addConfirmation);
+        executors->append(executor);
+    }
+
+    // Scan files for all Tasks
+    long totalFileSize = 0;
+    for (int i = 0; i < tasks->size(); i++) {
+        TaskExecutor *executor = executors->at(i);
+        long taskFileSize = executor->scan();
+        totalFileSize += taskFileSize;
+    }
+
+    // Perform backup Tasks
+    for (int i = 0; i < tasks->size(); i++) {
+        TaskExecutor *executor = executors->at(i);
+        //executor->backup();
+    }
+}
+
+void MainWindow::addConfirmation(Question *question) {
+    // Add Entry to the particular TaskTable
+    QTableWidget *table = tables->value(question->task());
+
+    // Insert new Row
+    int rowNumber = table->rowCount();
+    table->insertRow(rowNumber);
+
+    // Source and Target Files
+    if (question->sourceFile() != nullptr) {
+        table->setItem(rowNumber, 0, new QTableWidgetItem(question->sourceFile()->absolutePath()));
+    }
+    if (question->targetFile() != nullptr) {
+        table->setItem(rowNumber, 1, new QTableWidgetItem(question->targetFile()->absolutePath()));
+    }
+
+    // Objectives
+    QList<Question::Objectives> *objectives = question->objectives();
+    QString objectivesString = "";
+    for (int i = 0; i < objectives->size(); i++) {
+        if (!objectivesString.isEmpty()) {
+            objectivesString += ", ";
+        }
+
+        Question::Objectives objective = objectives->at(i);
+        if (objective == Question::Objectives::DifferentSizes) {
+            objectivesString += "Size";
+        }
+
+        if (objective == Question::Objectives::DifferentCreateTime) {
+            objectivesString += "Creation";
+        }
+
+        if (objective == Question::Objectives::DifferentModificationTime) {
+            objectivesString += "Modification";
+        }
+
+        if (objective == Question::Objectives::DeletedSourceFile) {
+            objectivesString += "No Source";
+        }
+    }
+    table->setItem(rowNumber, 2, new QTableWidgetItem(objectivesString));
+
+    // TODO Find out automatic way to resize columns (probably table full-width use)
+    table->resizeColumnsToContents();
 }
 
 MainWindow::~MainWindow() {

@@ -2,8 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTableView>
+#include <QTableWidget>
 
+#include "entities/question.h"
 #include "entities/taskentity.h"
 
 QT_BEGIN_NAMESPACE
@@ -21,14 +22,17 @@ public:
 
 private slots:
     void on_startButton_clicked();
+    void addConfirmation(Question *question);
 
 private:
     Ui::MainWindow *ui;
 
-    QList<TaskEntity> tasks;
-    QMap<QString, QTableView> tables;
+    QList<TaskEntity*> *tasks = new QList<TaskEntity*>();
+    QMap<TaskEntity*, QTableWidget*> *tables = new QMap<TaskEntity*, QTableWidget*>();
 
     bool loadData();
     void fillTaskTable();
+    void createTaskTables();
+    void executeTasks();
 };
 #endif // MAINWINDOW_H

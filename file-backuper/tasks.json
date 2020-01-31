@@ -1,8 +1,18 @@
 [
-	{
-		"name" : "task1"
-	},
-	{
-		"name" : "task2"
-	}
+    {
+        "name" : "Documents",
+        "from" : "C:\docs",
+        "to"   : "D:\backup\docs",
+        options : [
+            "", ""
+        ]
+    },
+    {
+        "name" : "Photo",
+        "from" : "C:\photo",
+        "to"   : "D:\backup\photo",
+        options : [
+            "", ""
+        ]
+    }
 ]

@@ -16,17 +16,23 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    entities/fileentity.cpp \
+    entities/question.cpp \
     entities/taskentity.cpp \
     main.cpp \
     models/taskmodel.cpp \
     ui/mainwindow.cpp \
-    utils/jsonhelper.cpp
+    utils/jsonhelper.cpp \
+    utils/taskexecutor.cpp
 
 HEADERS += \
+    entities/fileentity.h \
+    entities/question.h \
     entities/taskentity.h \
     models/taskmodel.h \
     ui/mainwindow.h \
-    utils/jsonhelper.h
+    utils/jsonhelper.h \
+    utils/taskexecutor.h
 
 FORMS += \
     ui/mainwindow.ui
