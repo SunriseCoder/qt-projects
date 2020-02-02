@@ -9,11 +9,13 @@ TaskExecutor::TaskExecutor(TaskEntity *task) {
 }
 
 long TaskExecutor::scan() {
+    // Scan Source
     QMap<QString, FileEntity*> *sourceFilesMap = new QMap<QString, FileEntity*>();
     QFileInfo *sourceStartFolder = new QFileInfo(m_task->from());
     sourceStartFolder->makeAbsolute();
     scanRecursively(sourceStartFolder, sourceFilesMap, sourceStartFolder);
 
+    // Scan Target
     QMap<QString, FileEntity*> *targetFilesMap = new QMap<QString, FileEntity*>();
     QFileInfo *targetStartFolder = new QFileInfo(m_task->to());
     targetStartFolder->makeAbsolute();

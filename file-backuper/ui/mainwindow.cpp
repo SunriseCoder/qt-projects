@@ -45,6 +45,7 @@ bool MainWindow::loadData() {
     }
 
     fillTaskTable();
+    createTaskTables();
 
     return true;
 }
@@ -70,15 +71,6 @@ void MainWindow::fillTaskTable() {
     ui->scrollAreaLayout->addWidget(stubLabel);
 }
 
-void MainWindow::on_startButton_clicked() {
-    ui->startButton->setEnabled(false);
-
-    createTaskTables();
-    executeTasks();
-
-    ui->startButton->setEnabled(true);
-}
-
 void MainWindow::createTaskTables() {
     for (int i = 0; i < m_tasks->size(); i++) {
         TaskEntity *task = m_tasks->at(i);
@@ -101,6 +93,25 @@ void MainWindow::createTaskTables() {
 
         ui->scrollAreaLayout->insertWidget(ui->scrollAreaLayout->count() - 1, table);
     }
+}
+
+void MainWindow::on_startButton_clicked() {
+    ui->startButton->setEnabled(false);
+
+    // Clearing Data from previous run
+    m_taskExecutors->clear();
+    m_questions->clear();
+
+    // Clearing Tables
+    QList<CustomTableWidget*> taskTables = m_taskTables->values();
+    for (int i = 0; i < taskTables.size(); i++) {
+        CustomTableWidget *table = taskTables.at(i);
+        table->setRowCount(0);
+    }
+
+    // Run Tasks
+    executeTasks();
+    ui->startButton->setEnabled(true);
 }
 
 void MainWindow::executeTasks() {
