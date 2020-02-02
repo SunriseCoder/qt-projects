@@ -1,11 +1,15 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QContextMenuEvent>
 #include <QMainWindow>
-#include <QTableWidget>
 
 #include "entities/question.h"
 #include "entities/taskentity.h"
+
+#include "utils/taskexecutor.h"
+
+#include "widgets/customtablewidget.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -23,12 +27,16 @@ public:
 private slots:
     void on_startButton_clicked();
     void addConfirmation(Question *question);
+    void handleTableContextMenu(CustomTableWidget *table, QContextMenuEvent *event);
+    void processUserAnswer(TaskEntity *task, Question::Actions action);
 
 private:
     Ui::MainWindow *ui;
 
-    QList<TaskEntity*> *tasks = new QList<TaskEntity*>();
-    QMap<TaskEntity*, QTableWidget*> *tables = new QMap<TaskEntity*, QTableWidget*>();
+    QList<TaskEntity*> *m_tasks = new QList<TaskEntity*>();
+    QMap<TaskEntity*, TaskExecutor*> *m_taskExecutors = new QMap<TaskEntity*, TaskExecutor*>();
+    QMap<TaskEntity*, CustomTableWidget*> *m_taskTables = new QMap<TaskEntity*, CustomTableWidget*>();
+    QMap<TaskEntity*, QMap<int, Question*>> *m_questions = new QMap<TaskEntity*, QMap<int, Question*>>();
 
     bool loadData();
     void fillTaskTable();

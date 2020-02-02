@@ -23,7 +23,10 @@ SOURCES += \
     models/taskmodel.cpp \
     ui/mainwindow.cpp \
     utils/jsonhelper.cpp \
-    utils/taskexecutor.cpp
+    utils/taskexecutor.cpp \
+    widgets/customaction.cpp \
+    widgets/custommenu.cpp \
+    widgets/customtablewidget.cpp
 
 HEADERS += \
     entities/fileentity.h \
@@ -32,7 +35,10 @@ HEADERS += \
     models/taskmodel.h \
     ui/mainwindow.h \
     utils/jsonhelper.h \
-    utils/taskexecutor.h
+    utils/taskexecutor.h \
+    widgets/customaction.h \
+    widgets/custommenu.h \
+    widgets/customtablewidget.h
 
 FORMS += \
     ui/mainwindow.ui

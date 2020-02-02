@@ -20,16 +20,12 @@ long TaskExecutor::scan() {
     scanRecursively(targetStartFolder, targetFilesMap, targetStartFolder);
 
     // Comparing Source Files against Target Files
-    //QMapIterator<QString, FileEntity*> *sourceFilesIterator = new QMapIterator<QString, FileEntity*>(sourceFilesMap);
-    //QMapIterator<QString, FileEntity*> sourceFilesIterator(sourceFilesMap);
-    //sourceFiles->values()
     QListIterator<FileEntity*> *sourceFilesIterator = new QListIterator<FileEntity*>(sourceFilesMap->values());
     while (sourceFilesIterator->hasNext()) {
         FileEntity *sourceFile = sourceFilesIterator->next();
         if (targetFilesMap->contains(sourceFile->relativePath())) {
             FileEntity *targetFile = targetFilesMap->value(sourceFile->relativePath());
             Question *question = nullptr;
-
 
             // Different File Sizes
             if (sourceFile->size() != targetFile->size()) {
@@ -61,15 +57,12 @@ long TaskExecutor::scan() {
                 question->addAction(Question::Actions::Overwrite);
                 question->addAction(Question::Actions::Skip);
 
-                // Saving File Task to the Queue
-                questionsQueue->append(question);
-
                 // Sending the Question to the User
                 emit needConfirmation(question);
             }
         } else {
             // New File - just copy it
-            copyQueue->append(sourceFile);
+            m_copyQueue->append(sourceFile);
         }
     }
 
@@ -91,9 +84,6 @@ long TaskExecutor::scan() {
             // Add possible choice options for the User
             question->addAction(Question::Actions::Delete);
             question->addAction(Question::Actions::Skip);
-
-            // Saving File Task to the Queue
-            questionsQueue->append(question);
 
             // Sending the Question to the User
             emit needConfirmation(question);
@@ -122,4 +112,46 @@ void TaskExecutor::scanRecursively(QFileInfo *path, QMap<QString, FileEntity*> *
         FileEntity *file = new FileEntity(path, startPath);
         fileMap->insert(file->relativePath(), file);
     }
+}
+
+void TaskExecutor::sendAnswer(Question *question) {
+    Question::Actions action = question->answer();
+    if (action == Question::Actions::Overwrite) {
+        m_copyQueue->append(question->sourceFile());
+    } else if (action == Question::Actions::Delete) {
+        m_deleteQueue->append(question->targetFile());
+    } else if (action == Question::Actions::Skip) {
+        // Just do nothing
+    } else {
+        qWarning("Unknown User Answer");
+    }
+
+    // Invoking to process file (especially after backup is over)
+    backup();
+}
+
+void TaskExecutor::backup() {
+    // Checking Backup in Progress Lock
+    if (m_backupInProgress) {
+        return;
+    }
+    // Acquiring Lock
+    m_backupInProgress = true;
+
+    // TODO Remove debug info
+    qInfo("=== Backup dump (Task: " + m_task->name().toUtf8() + ") ===");
+    qInfo("-- Copy Dump --");
+    for (int i = 0; i < m_copyQueue->size(); i++) {
+        FileEntity *file = m_copyQueue->at(i);
+        qInfo(file->absolutePath().toUtf8() + " -> " + m_task->to().toUtf8() + file->relativePath().toUtf8());
+    }
+    qInfo("-- Delete Dump --");
+    for (int i = 0; i < m_deleteQueue->size(); i++) {
+        FileEntity *file = m_deleteQueue->at(i);
+        qInfo(file->absolutePath().toUtf8());
+    }
+    qInfo("=== End of the dump (Task: " + m_task->name().toUtf8() + ") ===");
+
+    // Releasing Lock after backup is done
+    m_backupInProgress = false;
 }
