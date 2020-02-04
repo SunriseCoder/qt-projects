@@ -9,6 +9,7 @@
 
 #include "models/taskmodel.h"
 
+#include "utils/alltasksexecutor.h"
 #include "utils/jsonhelper.h"
 #include "utils/taskexecutor.h"
 
@@ -21,10 +22,20 @@
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
 
-    loadData();
+    // Initialize the Executor where all Tasks will be executed
+    m_allExecutor = new AllTasksExecutor(m_tasks);
+    connect(m_allExecutor, &AllTasksExecutor::needConfirmation, this, &MainWindow::addConfirmation);
+    connect(m_allExecutor, &AllTasksExecutor::bytesCopied, this, &MainWindow::updateProgress);
+
+    // Initialize Second Thread working for Scan and Copy
+    QThread *tasksThread = new QThread(parent);
+    m_allExecutor->moveToThread(tasksThread);
+    connect(tasksThread, &QThread::started, m_allExecutor, &AllTasksExecutor::execute);
+
+    loadTasks();
 }
 
-bool MainWindow::loadData() {
+bool MainWindow::loadTasks() {
     QJsonDocument jsonDoc;
     if (!JsonHelper::loadJson("tasks.json", &jsonDoc)) {
         return false;
@@ -63,6 +74,7 @@ void MainWindow::fillTaskTable() {
     taskTable->setModel(taskModel);
     taskTable->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
     taskTable->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+    taskTable->resizeColumnsToContents();
     ui->scrollAreaLayout->addWidget(taskTable);
 
     // Stub Label to fill the remaining space in the bottom of the ScrollArea
@@ -99,7 +111,6 @@ void MainWindow::on_startButton_clicked() {
     ui->startButton->setEnabled(false);
 
     // Clearing Data from previous run
-    m_taskExecutors->clear();
     m_questions->clear();
 
     // Clearing Tables
@@ -110,34 +121,10 @@ void MainWindow::on_startButton_clicked() {
     }
 
     // Run Tasks
-    executeTasks();
-    ui->startButton->setEnabled(true);
-}
+    m_allExecutor->thread()->start();
 
-void MainWindow::executeTasks() {
-    // Create Task Executors
-    for (int i = 0; i < m_tasks->size(); i++) {
-        TaskEntity *task = m_tasks->at(i);
-        TaskExecutor *executor = new TaskExecutor(task);
-        connect(executor, &TaskExecutor::needConfirmation, this, &MainWindow::addConfirmation);
-        m_taskExecutors->insert(task, executor);
-    }
-
-    // Scan files for all Tasks
-    long totalFileSize = 0;
-    for (int i = 0; i < m_tasks->size(); i++) {
-        TaskEntity *task = m_tasks->at(i);
-        TaskExecutor *executor = m_taskExecutors->value(task);
-        long taskFileSize = executor->scan();
-        totalFileSize += taskFileSize;
-    }
-
-    // Perform backup Tasks
-    for (int i = 0; i < m_tasks->size(); i++) {
-        TaskEntity *task = m_tasks->at(i);
-        TaskExecutor *executor = m_taskExecutors->value(task);
-        executor->backup();
-    }
+    // TODO Make 300 ms delay and change button to Cancel
+    //ui->startButton->setEnabled(true);
 }
 
 void MainWindow::addConfirmation(Question *question) {
@@ -204,9 +191,15 @@ void MainWindow::handleTableContextMenu(CustomTableWidget *table, QContextMenuEv
     QMap<int, Question*> tableQuestions = m_questions->value(task);
     Question *firstQuestion = tableQuestions.value(firstRowIndex);
     QList<Question::Objectives> *firstObjectives = firstQuestion->objectives();
-    for (int i = 1; i < selectedRows.size(); i++) {
+    for (int i = 0; i < selectedRows.size(); i++) {
         int rowNumber = selectedRows.at(i).row();
         Question *question = tableQuestions.value(rowNumber);
+
+        if (question->answer() != Question::NoAction) {
+            qWarning("No ContextMenu created due to the question already answered");
+            return;
+        }
+
         QList<Question::Objectives> *objectives = question->objectives();
         if (*objectives != *firstObjectives) {
             qWarning("No ContextMenu created due to different types Row selected");
@@ -244,8 +237,8 @@ void MainWindow::processUserAnswer(TaskEntity *task, Question::Actions action) {
         return;
     }
 
+
     CustomTableWidget *questionsTable = m_taskTables->value(task);
-    TaskExecutor *executor = m_taskExecutors->value(task);
     QMap<int, Question*> tableQuestionsMap = m_questions->value(task);
     for (int i = 0; i < selectedRows.size(); i++) {
         int rowNumber = selectedRows.at(i).row();
@@ -259,8 +252,15 @@ void MainWindow::processUserAnswer(TaskEntity *task, Question::Actions action) {
         question->setAnswer(action);
 
         // Propogating Answer to Task Executor
-        executor->sendAnswer(question);
+        m_allExecutor->sendAnswer(task, question);
     }
+}
+
+void MainWindow::updateProgress(qint64 copied, qint64 total) {
+    // TODO Rewrite it using 3 ProgressBars (File, Task and Total)
+    // AllTasksExecutor should send just 3 int values from 0 to 100 for each ProgressBar
+    int value = copied * 100 / total;
+    ui->progressBar->setValue(value);
 }
 
 MainWindow::~MainWindow() {

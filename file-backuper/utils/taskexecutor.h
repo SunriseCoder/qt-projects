@@ -19,6 +19,7 @@ public:
 
 signals:
     void needConfirmation(Question *question);
+    void bytesCopied(qint64 copied, qint64 total);
 
 private:
     bool m_backupInProgress = false;
@@ -27,6 +28,11 @@ private:
     QList<FileEntity*> *m_deleteQueue = new QList<FileEntity*>();
 
     void scanRecursively(QFileInfo *path, QMap<QString, FileEntity*> *fileMap, QFileInfo *startPath);
+    QString makeAbsolutePath(QString path1, QString path2);
+    bool copyFile(QString sourcePath, QString targetPath);
+
+private slots:
+    void updateProgress(qint64 copied, qint64 total);
 };
 
 #endif // TASKEXECUTOR_H

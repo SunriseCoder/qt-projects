@@ -22,6 +22,9 @@ SOURCES += \
     main.cpp \
     models/taskmodel.cpp \
     ui/mainwindow.cpp \
+    utils/alltasksexecutor.cpp \
+    utils/convert.cpp \
+    utils/filecopier.cpp \
     utils/jsonhelper.cpp \
     utils/taskexecutor.cpp \
     widgets/customaction.cpp \
@@ -34,6 +37,9 @@ HEADERS += \
     entities/taskentity.h \
     models/taskmodel.h \
     ui/mainwindow.h \
+    utils/alltasksexecutor.h \
+    utils/convert.h \
+    utils/filecopier.h \
     utils/jsonhelper.h \
     utils/taskexecutor.h \
     widgets/customaction.h \

@@ -7,6 +7,7 @@
 #include "entities/question.h"
 #include "entities/taskentity.h"
 
+#include "utils/alltasksexecutor.h"
 #include "utils/taskexecutor.h"
 
 #include "widgets/customtablewidget.h"
@@ -29,16 +30,17 @@ private slots:
     void addConfirmation(Question *question);
     void handleTableContextMenu(CustomTableWidget *table, QContextMenuEvent *event);
     void processUserAnswer(TaskEntity *task, Question::Actions action);
+    void updateProgress(qint64 copied, qint64 total);
 
 private:
     Ui::MainWindow *ui;
 
     QList<TaskEntity*> *m_tasks = new QList<TaskEntity*>();
-    QMap<TaskEntity*, TaskExecutor*> *m_taskExecutors = new QMap<TaskEntity*, TaskExecutor*>();
+    AllTasksExecutor *m_allExecutor;
     QMap<TaskEntity*, CustomTableWidget*> *m_taskTables = new QMap<TaskEntity*, CustomTableWidget*>();
     QMap<TaskEntity*, QMap<int, Question*>> *m_questions = new QMap<TaskEntity*, QMap<int, Question*>>();
 
-    bool loadData();
+    bool loadTasks();
     void fillTaskTable();
     void createTaskTables();
     void executeTasks();

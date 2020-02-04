@@ -2,6 +2,9 @@
 #include <QMap>
 #include <QMapIterator>
 
+#include "utils/convert.h"
+#include "utils/filecopier.h"
+
 #include "taskexecutor.h"
 
 TaskExecutor::TaskExecutor(TaskEntity *task) {
@@ -34,15 +37,7 @@ long TaskExecutor::scan() {
                 if (question == nullptr) {
                     question = new Question(m_task, sourceFile, targetFile);
                 }
-                question->addObjective(Question::Objectives::DifferentSizes);
-            }
-
-            // Different Creation Time
-            if (sourceFile->created() != targetFile->created()) {
-                if (question == nullptr) {
-                    question = new Question(m_task, sourceFile, targetFile);
-                }
-                question->addObjective(Question::Objectives::DifferentCreateTime);
+                question->addObjective(Question::DifferentSizes);
             }
 
             // Different Modified Time
@@ -50,14 +45,14 @@ long TaskExecutor::scan() {
                 if (question == nullptr) {
                     question = new Question(m_task, sourceFile, targetFile);
                 }
-                question->addObjective(Question::Objectives::DifferentModificationTime);
+                question->addObjective(Question::DifferentModificationTime);
             }
 
             // If one of the condition was triggered, sending Question to the User
             if (question != nullptr) {
                 // Add possible choice options for the User
-                question->addAction(Question::Actions::Overwrite);
-                question->addAction(Question::Actions::Skip);
+                question->addAction(Question::Overwrite);
+                question->addAction(Question::Skip);
 
                 // Sending the Question to the User
                 emit needConfirmation(question);
@@ -79,13 +74,13 @@ long TaskExecutor::scan() {
             if (question == nullptr) {
                 question = new Question(m_task, nullptr, targetFile);
             }
-            question->addObjective(Question::Objectives::DeletedSourceFile);
+            question->addObjective(Question::DeletedSourceFile);
         }
 
         if (question != nullptr) {
             // Add possible choice options for the User
-            question->addAction(Question::Actions::Delete);
-            question->addAction(Question::Actions::Skip);
+            question->addAction(Question::Delete);
+            question->addAction(Question::Skip);
 
             // Sending the Question to the User
             emit needConfirmation(question);
@@ -140,20 +135,82 @@ void TaskExecutor::backup() {
     // Acquiring Lock
     m_backupInProgress = true;
 
-    // TODO Remove debug info
-    qInfo("=== Backup dump (Task: " + m_task->name().toUtf8() + ") ===");
-    qInfo("-- Copy Dump --");
-    for (int i = 0; i < m_copyQueue->size(); i++) {
-        FileEntity *file = m_copyQueue->at(i);
-        qInfo(file->absolutePath().toUtf8() + " -> " + m_task->to().toUtf8() + file->relativePath().toUtf8());
+    // Actual Files Copy
+    qInfo("=== Backup Task: " + m_task->name().toUtf8() + " ===");
+    qInfo("-- Copy Files --");
+    QMutableListIterator<FileEntity*> copyQueueIterator(*m_copyQueue);
+    for (;copyQueueIterator.hasNext();copyQueueIterator.remove()) {
+        FileEntity *fileEntity = copyQueueIterator.next();
+
+        QString sourcePath = fileEntity->absolutePath();
+        QString targetPath = makeAbsolutePath(m_task->to(), fileEntity->relativePath());
+
+        qInfo(sourcePath.toUtf8() + " -> " + targetPath.toUtf8());
+        bool copyResult = copyFile(sourcePath, targetPath);
+        if (!copyResult) {
+            qWarning("Couldn't copy file \"" + sourcePath.toUtf8() + "\" -> \"" + targetPath.toUtf8() + "\"");
+            // TODO Return back to User
+        }
     }
-    qInfo("-- Delete Dump --");
+
+    // Delete old files
+    qInfo("-- Delete Files --");
     for (int i = 0; i < m_deleteQueue->size(); i++) {
         FileEntity *file = m_deleteQueue->at(i);
-        qInfo(file->absolutePath().toUtf8());
+        QString filePath = file->absolutePath();
+
+        qInfo(filePath.toUtf8());
+
+        if (QFile::exists(filePath)) {
+            QFile::remove(filePath);
+        }
     }
     qInfo("=== End of the dump (Task: " + m_task->name().toUtf8() + ") ===");
 
     // Releasing Lock after backup is done
     m_backupInProgress = false;
+}
+
+QString TaskExecutor::makeAbsolutePath(QString path1, QString path2) {
+    QFileInfo targetFileInfo(path1);
+    targetFileInfo.makeAbsolute();
+    QString result = targetFileInfo.absoluteFilePath() + "/" + path2;
+    return result;
+}
+
+bool TaskExecutor::copyFile(QString sourcePath, QString targetPath) {
+    QFileInfo targetFileInfo(targetPath);
+    // If File already exists
+    if (targetFileInfo.exists()) {
+        // Removing
+        bool removeResult = QFile::remove(targetPath);
+        if (!removeResult) {
+            return false;
+        }
+    } else {
+        // Otherwise first trying to create all parent folders
+        QFileInfo targetFileParentInfo(targetFileInfo.absolutePath());
+        if (!targetFileParentInfo.exists()) {
+            QDir targetFileParentDir(targetFileParentInfo.absoluteFilePath());
+            bool mkpathResult = targetFileParentDir.mkpath(".");
+            if (!mkpathResult) {
+                return false;
+            }
+        }
+    }
+
+    // Actual File Copy
+    FileCopier copier(sourcePath, targetPath);
+    copier.setTimeProgressInterval(100);
+    qInfo("connecting");
+    connect(&copier, &FileCopier::bytesCopied, this, &TaskExecutor::updateProgress);
+    bool copyResult = copier.copy();
+    qInfo("disconnecting");
+    disconnect(&copier, &FileCopier::bytesCopied, this, &TaskExecutor::updateProgress);
+
+    return copyResult;
+}
+
+void TaskExecutor::updateProgress(qint64 copied, qint64 total) {
+    emit bytesCopied(copied, total);
 }

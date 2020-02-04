@@ -10,7 +10,6 @@ class Question {
 public:
     enum Objectives {
         DifferentSizes,
-        DifferentCreateTime,
         DifferentModificationTime,
         DeletedSourceFile
     };
@@ -18,7 +17,6 @@ public:
     static QString objectiveText(Objectives objective) {
         switch (objective) {
             case DifferentSizes: return "Size";
-            case DifferentCreateTime: return "Creation";
             case DifferentModificationTime: return "Modification";
             case DeletedSourceFile: return "No Source";
             default: throw std::exception();
@@ -26,6 +24,7 @@ public:
     };
 
     enum Actions {
+        NoAction,
         Overwrite,
         Delete,
         Skip
@@ -33,6 +32,7 @@ public:
 
     static QString actionText(Actions action) {
         switch (action) {
+            case NoAction: return "No Action";
             case Overwrite: return "Overwrite";
             case Delete: return "Delete";
             case Skip: return "Skip";
@@ -60,7 +60,7 @@ private:
     QList<Actions> *m_actions = new QList<Actions>();
     FileEntity *m_sourceFile;
     FileEntity *m_targetFile;
-    Actions m_answer;
+    Actions m_answer = NoAction;
 };
 
 #endif // QUESTION_H
