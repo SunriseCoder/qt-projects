@@ -25,7 +25,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     // Initialize the Executor where all Tasks will be executed
     m_allExecutor = new AllTasksExecutor(m_tasks);
     connect(m_allExecutor, &AllTasksExecutor::needConfirmation, this, &MainWindow::addConfirmation);
-    connect(m_allExecutor, &AllTasksExecutor::bytesCopied, this, &MainWindow::updateProgress);
+    connect(m_allExecutor, &AllTasksExecutor::updateProgressSignal, this, &MainWindow::updateProgress);
+    connect(m_allExecutor, &AllTasksExecutor::allTasksFinished, this, &MainWindow::onAllTasksFinished);
 
     // Initialize Second Thread working for Scan and Copy
     QThread *tasksThread = new QThread(parent);
@@ -108,7 +109,8 @@ void MainWindow::createTaskTables() {
 }
 
 void MainWindow::on_startButton_clicked() {
-    ui->startButton->setEnabled(false);
+    ui->startButton->setVisible(false);
+    ui->cancelButton->setVisible(true);
 
     // Clearing Data from previous run
     m_questions->clear();
@@ -125,6 +127,11 @@ void MainWindow::on_startButton_clicked() {
 
     // TODO Make 300 ms delay and change button to Cancel
     //ui->startButton->setEnabled(true);
+}
+
+void MainWindow::onAllTasksFinished() {
+    ui->startButton->setVisible(true);
+    ui->cancelButton->setVisible(false);
 }
 
 void MainWindow::addConfirmation(Question *question) {
@@ -256,11 +263,10 @@ void MainWindow::processUserAnswer(TaskEntity *task, Question::Actions action) {
     }
 }
 
-void MainWindow::updateProgress(qint64 copied, qint64 total) {
-    // TODO Rewrite it using 3 ProgressBars (File, Task and Total)
-    // AllTasksExecutor should send just 3 int values from 0 to 100 for each ProgressBar
-    int value = copied * 100 / total;
-    ui->progressBar->setValue(value);
+void MainWindow::updateProgress(int filePercentage, int taskPercentage, int totalPercentage) {
+    ui->fileProgressBar->setValue(filePercentage);
+    ui->taskProgressBar->setValue(taskPercentage);
+    ui->totalProgressBar->setValue(totalPercentage);
 }
 
 MainWindow::~MainWindow() {

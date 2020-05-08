@@ -18,11 +18,12 @@ public:
 
 signals:
     void needConfirmation(Question *question);
-    void bytesCopied(qint64 copied, qint64 total);
+    void updateProgressSignal(int filePercentage, int taskPercentage, int totalPercentage);
+    void allTasksFinished(bool succeed);
 
 public slots:
     void addConfirmation(Question *question);
-    void updateProgress(qint64 copied, qint64 total);
+    void updateProgress(int filePercentage, int taskPercentage);
 
 private:
     QList<TaskEntity*> *m_tasks;

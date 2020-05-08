@@ -27,10 +27,11 @@ public:
 
 private slots:
     void on_startButton_clicked();
+    void onAllTasksFinished();
     void addConfirmation(Question *question);
     void handleTableContextMenu(CustomTableWidget *table, QContextMenuEvent *event);
     void processUserAnswer(TaskEntity *task, Question::Actions action);
-    void updateProgress(qint64 copied, qint64 total);
+    void updateProgress(int filePercentage, int taskPercentage, int totalPercentage);
 
 private:
     Ui::MainWindow *ui;

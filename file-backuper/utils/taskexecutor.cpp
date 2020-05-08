@@ -60,6 +60,7 @@ long TaskExecutor::scan() {
         } else {
             // New File - just copy it
             m_copyQueue->append(sourceFile);
+            m_bytesTotal += sourceFile->size().toLongLong();
         }
     }
 
@@ -115,6 +116,7 @@ void TaskExecutor::sendAnswer(Question *question) {
     Question::Actions action = question->answer();
     if (action == Question::Actions::Overwrite) {
         m_copyQueue->append(question->sourceFile());
+        m_bytesTotal += question->sourceFile()->size().toLongLong();
     } else if (action == Question::Actions::Delete) {
         m_deleteQueue->append(question->targetFile());
     } else if (action == Question::Actions::Skip) {
@@ -203,14 +205,16 @@ bool TaskExecutor::copyFile(QString sourcePath, QString targetPath) {
     FileCopier copier(sourcePath, targetPath);
     copier.setTimeProgressInterval(100);
     qInfo("connecting");
-    connect(&copier, &FileCopier::bytesCopied, this, &TaskExecutor::updateProgress);
+    connect(&copier, &FileCopier::updateProgressSignal, this, &TaskExecutor::updateProgress);
     bool copyResult = copier.copy();
     qInfo("disconnecting");
-    disconnect(&copier, &FileCopier::bytesCopied, this, &TaskExecutor::updateProgress);
+    disconnect(&copier, &FileCopier::updateProgressSignal, this, &TaskExecutor::updateProgress);
 
     return copyResult;
 }
 
-void TaskExecutor::updateProgress(qint64 copied, qint64 total) {
-    emit bytesCopied(copied, total);
+void TaskExecutor::updateProgress(int filePercentage, qint64 bytesDelta) {
+    m_bytesCopied += bytesDelta;
+    int taskPercentage = 100 * m_bytesCopied / m_bytesTotal;
+    emit updateProgressSignal(filePercentage, taskPercentage);
 }
