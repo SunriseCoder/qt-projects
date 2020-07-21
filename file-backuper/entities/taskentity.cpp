@@ -1,3 +1,6 @@
+#include <QJsonArray>
+#include <QList>
+
 #include "utils/jsonhelper.h"
 
 #include "taskentity.h"
@@ -18,6 +21,15 @@ TaskEntity* TaskEntity::fromJson(QJsonObject jsonObj) {
     if (jsonObj.contains("to")) {
         QString to = jsonObj["to"].toString();
         task->setTo(to);
+    }
+
+    if (jsonObj.contains("excludePaths")) {
+        QJsonArray excludePathsArray = jsonObj["excludePaths"].toArray();
+        QSet<QString> *excludePaths = new QSet<QString>();
+        foreach (QVariant qVariant, excludePathsArray.toVariantList()) {
+            excludePaths->insert(qVariant.value<QString>());
+        }
+        task->setExcludePaths(excludePaths);
     }
 
     return task;

@@ -126,10 +126,14 @@ void MainWindow::on_startButton_clicked() {
     m_allExecutor->thread()->start();
 
     // TODO Make 300 ms delay and change button to Cancel
+    // Beware if all the tasks will be done faster than 300 ms, it should not block the UI completely
     //ui->startButton->setEnabled(true);
 }
 
 void MainWindow::onAllTasksFinished() {
+    ui->fileProgressBar->setValue(100);
+    ui->taskProgressBar->setValue(100);
+    ui->totalProgressBar->setValue(100);
     ui->startButton->setVisible(true);
     ui->cancelButton->setVisible(false);
 }

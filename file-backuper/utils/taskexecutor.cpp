@@ -1,6 +1,7 @@
 #include <QDir>
 #include <QMap>
 #include <QMapIterator>
+#include <QSet>
 
 #include "utils/convert.h"
 #include "utils/filecopier.h"
@@ -93,6 +94,24 @@ long TaskExecutor::scan() {
 }
 
 void TaskExecutor::scanRecursively(QFileInfo *path, QMap<QString, FileEntity*> *fileMap, QFileInfo *startPath) {
+    QString relativePath = path->absoluteFilePath().mid(startPath->absoluteFilePath().length() + 1);
+    if (m_task->excludePaths()->contains(relativePath)) {
+        qDebug("Exclude path: " + path->absoluteFilePath().toUtf8() + " - skipping");
+        return;
+    }
+
+    if (!path->exists()) {
+        qErrnoWarning(-1, "Path not found: " + path->absoluteFilePath().toUtf8());
+        return;
+    }
+
+    // TODO Follow Symlinks Option Check must be implemented here
+    // By default do not follow symlinks
+    if (path->isSymLink()) {
+        qDebug("Following path is a symlink: " + path->absoluteFilePath().toUtf8() + " - skipping");
+        return;
+    }
+
     if (path->isDir()) {
         QDir folder(path->absoluteFilePath());
         QList<QFileInfo> fileList = folder.entryInfoList(QDir::AllEntries | QDir::NoDotAndDotDot);
@@ -204,10 +223,8 @@ bool TaskExecutor::copyFile(QString sourcePath, QString targetPath) {
     // Actual File Copy
     FileCopier copier(sourcePath, targetPath);
     copier.setTimeProgressInterval(100);
-    qInfo("connecting");
     connect(&copier, &FileCopier::updateProgressSignal, this, &TaskExecutor::updateProgress);
     bool copyResult = copier.copy();
-    qInfo("disconnecting");
     disconnect(&copier, &FileCopier::updateProgressSignal, this, &TaskExecutor::updateProgress);
 
     return copyResult;

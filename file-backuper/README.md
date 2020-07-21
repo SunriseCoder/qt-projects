@@ -11,6 +11,9 @@ Syntax:
 			"to"   : "D:\backup\docs",
 			"options" : [
 				"", ""
+			],
+			"excludePaths" : [
+				"finance", "confidential"
 			]
 		},
 		{
@@ -29,3 +32,4 @@ Syntax:
 - *options*:
     - 1
     - 2
+- *excludePaths* - list of *relative* paths to be *excluded*

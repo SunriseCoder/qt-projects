@@ -1,3 +1,5 @@
+#include <QSet>
+
 #include "taskmodel.h"
 
 TaskModel::TaskModel(QObject *parent, QList<TaskEntity*> *tasks) : QAbstractTableModel(parent) {
@@ -6,6 +8,7 @@ TaskModel::TaskModel(QObject *parent, QList<TaskEntity*> *tasks) : QAbstractTabl
     m_tableCaptions->append("Name");
     m_tableCaptions->append("From");
     m_tableCaptions->append("To");
+    m_tableCaptions->append("Excludes");
     m_tableCaptions->append("Options");
 }
 
@@ -32,6 +35,11 @@ QVariant TaskModel::data(const QModelIndex &index, int role) const {
             break;
         case 2:
             data = task->to();
+            break;
+        case 3:
+            if (task->excludePaths()) {
+                data = task->excludePaths()->toList().join(", ");
+            }
             break;
         }
     }
