@@ -13,7 +13,8 @@ Syntax:
 				"", ""
 			],
 			"excludePaths" : [
-				"finance", "confidential"
+				"finance",
+				"docs/confidential"
 			]
 		},
 		{
@@ -32,4 +33,4 @@ Syntax:
 - *options*:
     - 1
     - 2
-- *excludePaths* - list of *relative* paths to be *excluded*
+- *excludePaths* - list of *relative* paths to be *excluded*. Use the *forward slash (/)* if needed, *not* the backward (\).
